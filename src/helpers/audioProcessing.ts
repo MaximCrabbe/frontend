@@ -7,7 +7,7 @@ import {
   type DSPConfig,
   type DSPFilter,
   type GainFilter,
-  type LimiterFilter,
+  type SafetyLimiterFilter,
   type ParametricEQBand,
   type ParametricEQFilter,
   type ToneControlFilter,
@@ -76,10 +76,10 @@ function areDspFilterEqual(left: DSPFilter, right: DSPFilter): boolean {
     return areBalanceFiltersEqual(left, right);
   }
   if (
-    left.type === DSPFilterType.LIMITER &&
-    right.type === DSPFilterType.LIMITER
+    left.type === DSPFilterType.SAFETY_LIMITER &&
+    right.type === DSPFilterType.SAFETY_LIMITER
   ) {
-    return areLimiterFiltersEqual(left, right);
+    return areSafetyLimiterFiltersEqual(left, right);
   }
   if (
     left.type === DSPFilterType.COMPRESSOR &&
@@ -126,9 +126,9 @@ function areBalanceFiltersEqual(
   return left.balance === right.balance;
 }
 
-function areLimiterFiltersEqual(
-  left: LimiterFilter,
-  right: LimiterFilter,
+function areSafetyLimiterFiltersEqual(
+  left: SafetyLimiterFilter,
+  right: SafetyLimiterFilter,
 ): boolean {
   return left.ceiling === right.ceiling;
 }

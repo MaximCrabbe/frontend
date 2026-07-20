@@ -194,11 +194,11 @@
                 is_log: false,
               }"
             />
-            <DSPLimiter
+            <DSPSafetyLimiter
               v-else-if="
-                dsp.filters[selectedStage].type === DSPFilterType.LIMITER
+                dsp.filters[selectedStage].type === DSPFilterType.SAFETY_LIMITER
               "
-              v-model="dsp.filters[selectedStage] as LimiterFilter"
+              v-model="dsp.filters[selectedStage] as SafetyLimiterFilter"
             />
             <DSPCompressor
               v-else-if="
@@ -277,7 +277,7 @@ import {
   type BalanceFilter,
   ParametricEQFilter,
   ToneControlFilter,
-  type LimiterFilter,
+  type SafetyLimiterFilter,
   type CompressorFilter,
   EventType,
 } from "@/plugins/api/interfaces";
@@ -286,7 +286,7 @@ import DSPPipeline from "@/components/dsp/DSPPipeline.vue";
 import DSPSlider from "@/components/dsp/DSPSlider.vue";
 import DSPParametricEQ from "@/components/dsp/DSPParametricEQ.vue";
 import DSPToneControl from "@/components/dsp/DSPToneControl.vue";
-import DSPLimiter from "@/components/dsp/DSPLimiter.vue";
+import DSPSafetyLimiter from "@/components/dsp/DSPSafetyLimiter.vue";
 import DSPCompressor from "@/components/dsp/DSPCompressor.vue";
 import { COMPRESSOR_PRESETS } from "@/components/dsp/compressorPresets";
 import { Badge } from "@/components/ui/badge";
@@ -410,10 +410,10 @@ const addFilter = () => {
         balance: 0,
       };
       break;
-    case DSPFilterType.LIMITER:
+    case DSPFilterType.SAFETY_LIMITER:
       filter = {
         enabled: true,
-        type: DSPFilterType.LIMITER,
+        type: DSPFilterType.SAFETY_LIMITER,
         ceiling: -2.0,
       };
       break;
