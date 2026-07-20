@@ -52,7 +52,7 @@ const PRESET_FIELDS: (keyof CompressorParams)[] = [
   "makeup",
 ];
 
-// Reverse-match the stored values against the known bundles. There is no marker
+// Reverse-match the stored values against the known presets. There is no marker
 // field in the model, so the mode is inferred: an exact match means Basic with
 // that preset highlighted; anything else means Advanced.
 export const matchCompressorPreset = (

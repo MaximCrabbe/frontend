@@ -418,7 +418,7 @@ const addFilter = () => {
       };
       break;
     case DSPFilterType.COMPRESSOR:
-      // Initialize with the Light bundle so it opens in Basic/Light.
+      // Start from the Light preset so a new compressor opens in Basic mode.
       filter = {
         enabled: true,
         type: DSPFilterType.COMPRESSOR,

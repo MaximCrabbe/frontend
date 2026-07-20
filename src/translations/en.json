@@ -248,7 +248,10 @@
                 "presets": {
                     "light": "Light",
                     "medium": "Medium",
-                    "heavy": "Heavy"
+                    "heavy": "Heavy",
+                    "light_desc": "Gentle leveling",
+                    "medium_desc": "Balanced control",
+                    "heavy_desc": "Firm and punchy"
                 }
             },
             "parameter": {
