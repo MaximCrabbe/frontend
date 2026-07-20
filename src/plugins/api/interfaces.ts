@@ -1237,6 +1237,7 @@ export interface DashboardSession {
   device_id: string;
   provider_instance: string;
   path: string;
+  name: string; // device display name
 }
 
 export enum TaskStatus {
