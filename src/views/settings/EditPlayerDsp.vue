@@ -194,6 +194,18 @@
                 is_log: false,
               }"
             />
+            <DSPLimiter
+              v-else-if="
+                dsp.filters[selectedStage].type === DSPFilterType.LIMITER
+              "
+              v-model="dsp.filters[selectedStage] as LimiterFilter"
+            />
+            <DSPCompressor
+              v-else-if="
+                dsp.filters[selectedStage].type === DSPFilterType.COMPRESSOR
+              "
+              v-model="dsp.filters[selectedStage] as CompressorFilter"
+            />
           </v-card>
         </v-col>
       </v-row>
@@ -265,6 +277,8 @@ import {
   type BalanceFilter,
   ParametricEQFilter,
   ToneControlFilter,
+  type LimiterFilter,
+  type CompressorFilter,
   EventType,
 } from "@/plugins/api/interfaces";
 import { getPlayerName } from "@/helpers/utils";
@@ -272,6 +286,9 @@ import DSPPipeline from "@/components/dsp/DSPPipeline.vue";
 import DSPSlider from "@/components/dsp/DSPSlider.vue";
 import DSPParametricEQ from "@/components/dsp/DSPParametricEQ.vue";
 import DSPToneControl from "@/components/dsp/DSPToneControl.vue";
+import DSPLimiter from "@/components/dsp/DSPLimiter.vue";
+import DSPCompressor from "@/components/dsp/DSPCompressor.vue";
+import { COMPRESSOR_PRESETS } from "@/components/dsp/compressorPresets";
 import { Badge } from "@/components/ui/badge";
 import { useDSPPresets } from "@/composables/useDSPPresets";
 import {
@@ -391,6 +408,21 @@ const addFilter = () => {
         enabled: true,
         type: DSPFilterType.BALANCE,
         balance: 0,
+      };
+      break;
+    case DSPFilterType.LIMITER:
+      filter = {
+        enabled: true,
+        type: DSPFilterType.LIMITER,
+        ceiling: -2.0,
+      };
+      break;
+    case DSPFilterType.COMPRESSOR:
+      // Initialize with the Light bundle so it opens in Basic/Light.
+      filter = {
+        enabled: true,
+        type: DSPFilterType.COMPRESSOR,
+        ...COMPRESSOR_PRESETS.light,
       };
       break;
     default:

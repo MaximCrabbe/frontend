@@ -16,6 +16,8 @@ export enum DSPFilterType {
   TONE_CONTROL = "tone_control",
   GAIN = "gain",
   BALANCE = "balance",
+  LIMITER = "limiter",
+  COMPRESSOR = "compressor",
 }
 
 export enum ParametricEQBandType {
@@ -67,12 +69,31 @@ export interface BalanceFilter extends DSPFilterBase {
   balance: number;
 }
 
+// All values are in user-facing units (dB/ms/ratio); the server converts to
+// ffmpeg parameters, so the UI must never send anything else.
+export interface LimiterFilter extends DSPFilterBase {
+  type: DSPFilterType.LIMITER;
+  ceiling: number;
+}
+
+export interface CompressorFilter extends DSPFilterBase {
+  type: DSPFilterType.COMPRESSOR;
+  threshold: number;
+  ratio: number;
+  attack: number;
+  release: number;
+  knee: number;
+  makeup: number;
+}
+
 // Union type for all possible filters
 export type DSPFilter =
   | ParametricEQFilter
   | ToneControlFilter
   | GainFilter
-  | BalanceFilter;
+  | BalanceFilter
+  | LimiterFilter
+  | CompressorFilter;
 
 // Main DSP chain configuration
 export interface DSPConfig {

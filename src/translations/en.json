@@ -233,6 +233,24 @@
                 "mid_level": "Mid Level",
                 "treble_level": "Treble Level"
             },
+            "limiter": {
+                "ceiling": "Ceiling"
+            },
+            "compressor": {
+                "basic": "Basic",
+                "advanced": "Advanced",
+                "threshold": "Threshold",
+                "ratio": "Ratio",
+                "attack": "Attack",
+                "release": "Release",
+                "knee": "Knee",
+                "makeup": "Makeup Gain",
+                "presets": {
+                    "light": "Light",
+                    "medium": "Medium",
+                    "heavy": "Heavy"
+                }
+            },
             "parameter": {
                 "frequency": "Frequency",
                 "gain": "Gain",
@@ -243,7 +261,9 @@
                 "parametric_eq": "Parametric EQ",
                 "tone_control": "Tone Control",
                 "gain": "Gain",
-                "balance": "Balance"
+                "balance": "Balance",
+                "limiter": "Limiter",
+                "compressor": "Compressor"
             },
             "channels": {
                 "ALL": "All",
