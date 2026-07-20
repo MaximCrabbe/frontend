@@ -3,9 +3,11 @@ import { toRaw } from "vue";
 import {
   DSPFilterType,
   type BalanceFilter,
+  type CompressorFilter,
   type DSPConfig,
   type DSPFilter,
   type GainFilter,
+  type LimiterFilter,
   type ParametricEQBand,
   type ParametricEQFilter,
   type ToneControlFilter,
@@ -73,6 +75,18 @@ function areDspFilterEqual(left: DSPFilter, right: DSPFilter): boolean {
   ) {
     return areBalanceFiltersEqual(left, right);
   }
+  if (
+    left.type === DSPFilterType.LIMITER &&
+    right.type === DSPFilterType.LIMITER
+  ) {
+    return areLimiterFiltersEqual(left, right);
+  }
+  if (
+    left.type === DSPFilterType.COMPRESSOR &&
+    right.type === DSPFilterType.COMPRESSOR
+  ) {
+    return areCompressorFiltersEqual(left, right);
+  }
   return false;
 }
 
@@ -110,6 +124,27 @@ function areBalanceFiltersEqual(
   right: BalanceFilter,
 ): boolean {
   return left.balance === right.balance;
+}
+
+function areLimiterFiltersEqual(
+  left: LimiterFilter,
+  right: LimiterFilter,
+): boolean {
+  return left.ceiling === right.ceiling;
+}
+
+function areCompressorFiltersEqual(
+  left: CompressorFilter,
+  right: CompressorFilter,
+): boolean {
+  return (
+    left.threshold === right.threshold &&
+    left.ratio === right.ratio &&
+    left.attack === right.attack &&
+    left.release === right.release &&
+    left.knee === right.knee &&
+    left.makeup === right.makeup
+  );
 }
 
 function areParametricEqBandsEqual(
