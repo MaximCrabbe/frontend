@@ -254,6 +254,23 @@
                     "heavy_desc": "Firm and punchy"
                 }
             },
+            "high_low_pass": {
+                "mode_label": "Mode",
+                "mode": {
+                    "high_pass": "High-pass",
+                    "low_pass": "Low-pass"
+                },
+                "mode_desc": {
+                    "high_pass": "Removes content below the cutoff",
+                    "low_pass": "Removes content above the cutoff"
+                },
+                "slope": "Slope",
+                "slope_desc": {
+                    "12": "Gentle",
+                    "24": "Medium",
+                    "48": "Steep"
+                }
+            },
             "parameter": {
                 "frequency": "Frequency",
                 "gain": "Gain",
@@ -266,7 +283,8 @@
                 "gain": "Gain",
                 "balance": "Balance",
                 "safety_limiter": "Safety Limiter",
-                "compressor": "Compressor"
+                "compressor": "Compressor",
+                "high_low_pass": "High/Low-pass"
             },
             "channels": {
                 "ALL": "All",

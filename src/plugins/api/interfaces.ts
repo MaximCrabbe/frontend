@@ -18,6 +18,12 @@ export enum DSPFilterType {
   BALANCE = "balance",
   SAFETY_LIMITER = "safety_limiter",
   COMPRESSOR = "compressor",
+  HIGH_LOW_PASS = "high_low_pass",
+}
+
+export enum HighLowPassMode {
+  HIGH_PASS = "high_pass",
+  LOW_PASS = "low_pass",
 }
 
 export enum ParametricEQBandType {
@@ -86,6 +92,16 @@ export interface CompressorFilter extends DSPFilterBase {
   makeup: number;
 }
 
+// A first-class high-pass / low-pass filter. `slope` is dB/octave and must be
+// one of 12, 24 or 48 (each biquad section is 12 dB/oct, so the filter is a
+// cascade of 1/2/4 sections). `frequency` is the cutoff in Hz, 20..20000.
+export interface HighLowPassFilter extends DSPFilterBase {
+  type: DSPFilterType.HIGH_LOW_PASS;
+  mode: HighLowPassMode;
+  frequency: number;
+  slope: number;
+}
+
 // Union type for all possible filters
 export type DSPFilter =
   | ParametricEQFilter
@@ -93,7 +109,8 @@ export type DSPFilter =
   | GainFilter
   | BalanceFilter
   | SafetyLimiterFilter
-  | CompressorFilter;
+  | CompressorFilter
+  | HighLowPassFilter;
 
 // Main DSP chain configuration
 export interface DSPConfig {
