@@ -246,7 +246,7 @@ describe("LatestPodcastEpisodes playback sync", () => {
     );
     const wrapper = mountView();
     await flushPromises();
-    expect(wrapper.get('[role="status"]').exists()).toBe(true);
+    expect(wrapper.find('[role="status"]').exists()).toBe(true);
     finish([makeEpisode("survivor", "2026-11-07")]);
     await flushPromises();
     expect(wrapper.find('[role="status"]').exists()).toBe(false);

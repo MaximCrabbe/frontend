@@ -7,13 +7,12 @@ import {
   handleMediaItemClick,
   handleMenuBtnClick,
   handlePlayBtnClick,
-} from "@/helpers/utils";
+} from "@/helpers/media_item_actions";
 
-vi.mock(import("@/helpers/utils"), async (importOriginal) => {
+vi.mock(import("@/helpers/media_item_actions"), async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...actual,
-    formatDuration: vi.fn(() => "1:00"),
     handleMediaItemClick: vi.fn(),
     handleMenuBtnClick: vi.fn(),
     handlePlayBtnClick: vi.fn(),

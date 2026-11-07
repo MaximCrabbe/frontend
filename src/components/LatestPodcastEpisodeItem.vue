@@ -64,12 +64,12 @@ import { useI18n } from "vue-i18n";
 import { Check, Clock, Play } from "@lucide/vue";
 import ListItem from "@/components/ListItem.vue";
 import MediaItemThumb from "@/components/MediaItemThumb.vue";
+import { formatDuration } from "@/helpers/utils";
 import {
-  formatDuration,
   handleMediaItemClick,
   handleMenuBtnClick,
   handlePlayBtnClick,
-} from "@/helpers/utils";
+} from "@/helpers/media_item_actions";
 import { formatEpisodeReleaseDate } from "@/helpers/podcast_latest";
 import type { PodcastEpisode } from "@/plugins/api/interfaces";
 

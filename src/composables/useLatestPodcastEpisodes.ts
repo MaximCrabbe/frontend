@@ -161,7 +161,7 @@ export function useLatestPodcastEpisodes(
    * @returns true when a matching episode was updated.
    */
   const applyPlaybackUpdate = (
-    objectId: string | undefined,
+    objectId: string | null | undefined,
     data: unknown,
   ): boolean => {
     if (!objectId) return false;
