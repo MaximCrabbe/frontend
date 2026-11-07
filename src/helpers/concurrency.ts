@@ -40,3 +40,30 @@ export async function runWithConcurrency<T, R>(
   if (hasError) throw firstError;
   return results;
 }
+
+export type SettledResult<TValue> =
+  | { status: "fulfilled"; value: TValue }
+  | { status: "rejected"; reason: unknown };
+
+/** Collect partial feed failures without changing bulk action error handling. */
+export async function mapWithConcurrency<TInput, TOutput>(
+  items: readonly TInput[],
+  concurrency: number,
+  worker: (item: TInput, index: number) => Promise<TOutput>,
+  onSettled?: (result: SettledResult<TOutput>, index: number) => void,
+): Promise<SettledResult<TOutput>[]> {
+  return runWithConcurrency(
+    [...items],
+    async (item, index) => {
+      let settled: SettledResult<TOutput>;
+      try {
+        settled = { status: "fulfilled", value: await worker(item, index) };
+      } catch (reason) {
+        settled = { status: "rejected", reason };
+      }
+      onSettled?.(settled, index);
+      return settled;
+    },
+    Math.max(1, Math.floor(concurrency)),
+  );
+}
