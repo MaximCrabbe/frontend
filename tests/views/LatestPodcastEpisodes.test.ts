@@ -21,10 +21,15 @@ let playedCallback: ((evt: EventMessage) => void) | undefined;
 
 vi.mock("@/plugins/api", () => ({
   api: {
+    serverInfo: { value: { server_id: "view-server" } },
     getLibraryPodcasts: mockGetLibraryPodcasts,
     getPodcastEpisodes: mockGetPodcastEpisodes,
     subscribe: mockSubscribe,
   },
+}));
+
+vi.mock("@/plugins/store", () => ({
+  store: { currentUser: { user_id: "view-user" } },
 }));
 
 vi.mock("vue-sonner", () => ({
@@ -72,6 +77,7 @@ function mountView() {
 
 describe("LatestPodcastEpisodes playback sync", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     playedCallback = undefined;
     mockGetLibraryPodcasts.mockReset();
     mockGetPodcastEpisodes.mockReset();
@@ -176,6 +182,18 @@ describe("LatestPodcastEpisodes playback sync", () => {
 
     wrapper.unmount();
     expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps known rows visible with an alert when a refresh fails", async () => {
+    const wrapper = mountView();
+    await flushPromises();
+    mockGetLibraryPodcasts.mockRejectedValue(new Error("offline"));
+    wrapper.findComponent(Button).vm.$emit("click");
+    await flushPromises();
+    expect(wrapper.findAllComponents(LatestPodcastEpisodeItem)).toHaveLength(2);
+    expect(wrapper.get('[role="alert"]').text()).toContain(
+      "latest_episodes_load_failed",
+    );
   });
 
   it("filters by episode title and podcast name without fetching again", async () => {

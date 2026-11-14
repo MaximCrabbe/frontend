@@ -75,6 +75,17 @@ jobs:
       - name: Verify the Python package ships the frontend
         run: .github/scripts/verify-python-package.sh
 
+      # The local overlay packages this CI-tested bundle at the exact server
+      # frontend version; never rebuild the heavy frontend on the live host.
+      - name: Keep tested frontend for the local overlay
+        if: github.base_ref == 'custom-base-2.17.297.post1' || github.ref_name == 'custom-base-2.17.297.post1'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: tested-overlay-frontend
+          path: music_assistant_frontend/
+          if-no-files-found: error
+          retention-days: 7
+
       # disable typecheck for now
       # - name: Typecheck
       #   run: pnpm typecheck
