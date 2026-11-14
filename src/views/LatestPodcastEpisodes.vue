@@ -60,13 +60,18 @@
 
       <!-- partial-failure banner (single meaningful state) -->
       <div
-        v-if="hasPartialFailure && !isLoading"
+        v-if="
+          (hasPartialFailure || (loadFailed && episodes.length > 0)) &&
+          !isLoading
+        "
         class="mb-4 flex items-center gap-2 rounded-md border border-yellow-500/40 bg-yellow-500/10 px-3 py-2 text-sm text-yellow-600 dark:text-yellow-400"
         role="alert"
       >
         <TriangleAlert class="h-4 w-4 shrink-0" />
         <span>{{
-          $t("latest_episodes_partial_failure", [String(failedFeedCount)])
+          loadFailed
+            ? $t("latest_episodes_load_failed")
+            : $t("latest_episodes_partial_failure", [String(failedFeedCount)])
         }}</span>
       </div>
 
@@ -76,7 +81,10 @@
       </div>
 
       <!-- hard failure state -->
-      <Empty v-else-if="loadFailed" class="border-none gap-3 py-8">
+      <Empty
+        v-else-if="loadFailed && episodes.length === 0"
+        class="border-none gap-3 py-8"
+      >
         <EmptyMedia variant="icon">
           <TriangleAlert class="h-5 w-5" />
         </EmptyMedia>

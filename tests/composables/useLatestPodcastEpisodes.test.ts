@@ -1,6 +1,9 @@
 import type { Podcast, PodcastEpisode } from "@/plugins/api/interfaces";
 import { $t } from "@/plugins/i18n";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { flushPromises } from "@vue/test-utils";
+import { api } from "@/plugins/api";
+import { store } from "@/plugins/store";
 
 const { mockGetLibraryPodcasts, mockGetPodcastEpisodes, mockToast } =
   vi.hoisted(() => {
@@ -18,9 +21,14 @@ const { mockGetLibraryPodcasts, mockGetPodcastEpisodes, mockToast } =
 
 vi.mock("@/plugins/api", () => ({
   api: {
+    serverInfo: { value: { server_id: "test-server" } },
     getLibraryPodcasts: mockGetLibraryPodcasts,
     getPodcastEpisodes: mockGetPodcastEpisodes,
   },
+}));
+
+vi.mock("@/plugins/store", () => ({
+  store: { currentUser: { user_id: "test-user" } },
 }));
 
 vi.mock("vue-sonner", () => ({
@@ -44,11 +52,144 @@ function makeEpisode(id: string, releaseDate?: string): PodcastEpisode {
 }
 
 describe("useLatestPodcastEpisodes", () => {
+  afterEach(() => vi.restoreAllMocks());
   beforeEach(() => {
+    sessionStorage.clear();
+    api.serverInfo.value!.server_id = "test-server";
+    store.currentUser!.user_id = "test-user";
     mockGetLibraryPodcasts.mockReset();
     mockGetPodcastEpisodes.mockReset();
     mockToast.success.mockReset();
     mockToast.error.mockReset();
+  });
+
+  it("restores known episodes immediately and only loads uncached feeds on a fresh revisit", async () => {
+    mockGetLibraryPodcasts.mockResolvedValue([makePodcast("p1")]);
+    mockGetPodcastEpisodes.mockResolvedValue([
+      makeEpisode("known", "2026-11-13"),
+    ]);
+    await useLatestPodcastEpisodes().load();
+    mockGetLibraryPodcasts.mockResolvedValue([
+      makePodcast("p1"),
+      makePodcast("p2"),
+    ]);
+    mockGetPodcastEpisodes.mockClear();
+    mockGetPodcastEpisodes.mockResolvedValue([
+      makeEpisode("new", "2026-11-14"),
+    ]);
+    const revisit = useLatestPodcastEpisodes();
+    expect(revisit.episodes.value.map((e) => e.item_id)).toEqual(["known"]);
+    await revisit.load();
+    expect(mockGetPodcastEpisodes.mock.calls).toEqual([["p2", "test"]]);
+    expect(revisit.episodes.value.map((e) => e.item_id)).toEqual([
+      "new",
+      "known",
+    ]);
+    expect(revisit.progress.value).toEqual({ loaded: 2, total: 2 });
+  });
+
+  it("shows a completed feed while another feed is still pending", async () => {
+    mockGetLibraryPodcasts.mockResolvedValue([
+      makePodcast("fast"),
+      makePodcast("slow"),
+    ]);
+    let finish!: (value: PodcastEpisode[]) => void;
+    mockGetPodcastEpisodes.mockImplementation((id: string) =>
+      id === "fast"
+        ? Promise.resolve([makeEpisode("first", "2026-11-14")])
+        : new Promise<PodcastEpisode[]>((resolve) => {
+            finish = resolve;
+          }),
+    );
+    const { load, episodes, isLoading, progress } = useLatestPodcastEpisodes();
+    const pending = load();
+    await flushPromises();
+    expect(episodes.value.map((e) => e.item_id)).toEqual(["first"]);
+    expect(isLoading.value).toBe(true);
+    expect(progress.value).toEqual({ loaded: 1, total: 2 });
+    finish([makeEpisode("second", "2026-11-13")]);
+    await pending;
+    expect(episodes.value.map((e) => e.item_id)).toEqual(["first", "second"]);
+  });
+
+  it("revalidates expired feeds, replaces changed data, and removes unsubscribed podcasts", async () => {
+    const now = vi.spyOn(Date, "now").mockReturnValue(1000000);
+    mockGetLibraryPodcasts.mockResolvedValue([
+      makePodcast("p1"),
+      makePodcast("removed"),
+    ]);
+    mockGetPodcastEpisodes.mockImplementation(async (id: string) => [
+      makeEpisode(id),
+    ]);
+    await useLatestPodcastEpisodes().load();
+    now.mockReturnValue(1300000);
+    mockGetLibraryPodcasts.mockResolvedValue([makePodcast("p1")]);
+    mockGetPodcastEpisodes.mockClear();
+    mockGetPodcastEpisodes.mockResolvedValue([makeEpisode("changed")]);
+    const revisit = useLatestPodcastEpisodes();
+    await revisit.load();
+    expect(mockGetPodcastEpisodes.mock.calls).toEqual([["p1", "test"]]);
+    expect(revisit.episodes.value.map((e) => e.item_id)).toEqual(["changed"]);
+  });
+
+  it("manual refresh bypasses freshness and retains cached episodes on feed or library errors", async () => {
+    mockGetLibraryPodcasts.mockResolvedValue([makePodcast("p1")]);
+    mockGetPodcastEpisodes.mockResolvedValue([makeEpisode("known")]);
+    const listing = useLatestPodcastEpisodes();
+    await listing.load();
+    mockGetPodcastEpisodes.mockRejectedValue(new Error("offline"));
+    await listing.refresh();
+    expect(mockGetPodcastEpisodes).toHaveBeenCalledTimes(2);
+    expect(listing.episodes.value.map((e) => e.item_id)).toEqual(["known"]);
+    expect(listing.hasPartialFailure.value).toBe(true);
+    mockGetLibraryPodcasts.mockRejectedValue(new Error("offline"));
+    await listing.refresh();
+    expect(listing.loadFailed.value).toBe(true);
+    expect(listing.episodes.value.map((e) => e.item_id)).toEqual(["known"]);
+  });
+
+  it("tolerates corrupt, malformed, disabled and full browser storage", async () => {
+    mockGetLibraryPodcasts.mockResolvedValue([makePodcast("p1")]);
+    mockGetPodcastEpisodes.mockResolvedValue([makeEpisode("known")]);
+    for (const raw of [
+      "{broken",
+      "[]",
+      "null",
+      '{"bad":{"updatedAt":1,"episodes":[null]}}',
+      '{"bad":null}',
+    ]) {
+      const read = vi.spyOn(Storage.prototype, "getItem").mockReturnValue(raw);
+      await useLatestPodcastEpisodes().load();
+      read.mockRestore();
+    }
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("disabled");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("full");
+    });
+    const listing = useLatestPodcastEpisodes();
+    await listing.load();
+    expect(listing.episodes.value.map((e) => e.item_id)).toEqual(["known"]);
+    expect(listing.loadFailed.value).toBe(false);
+  });
+
+  it("isolates cached feeds by server and user, and keeps playback updates on revisit", async () => {
+    mockGetLibraryPodcasts.mockResolvedValue([makePodcast("p1")]);
+    mockGetPodcastEpisodes.mockResolvedValue([makeEpisode("known")]);
+    const listing = useLatestPodcastEpisodes();
+    await listing.load();
+    listing.applyPlaybackUpdate("podcast_episode://test/known", {
+      fully_played: true,
+    });
+    expect(useLatestPodcastEpisodes().episodes.value[0].fully_played).toBe(
+      true,
+    );
+    store.currentUser!.user_id = "other-user";
+    expect(useLatestPodcastEpisodes().episodes.value).toEqual([]);
+    store.currentUser!.user_id = "test-user";
+    api.serverInfo.value!.server_id = "other-server";
+    expect(useLatestPodcastEpisodes().episodes.value).toEqual([]);
   });
 
   it("loads every library page and caps simultaneous feed requests at four", async () => {
