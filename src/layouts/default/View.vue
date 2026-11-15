@@ -15,7 +15,7 @@
           ]"
         >
           <router-view v-slot="{ Component }">
-            <component :is="Component" />
+            <component :is="Component" :key="route.path" />
           </router-view>
           <add-to-playlist-dialog />
           <audio-overlay-dialog />
